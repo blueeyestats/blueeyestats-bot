@@ -1,0 +1,31 @@
+name: Ejecutar Blueeyestats-lab Diariamente
+
+on:
+  schedule:
+    # Se ejecuta a las 20:00 UTC (aprox 21:00 en España)
+    - cron: '0 20 * * *'
+  workflow_dispatch: # Esto permite darle al botón "Play" a mano cuando quieras
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-year: '3.9'
+
+      - name: Instalar librerías
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ejecutar Bot NBA
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python bot_nba.py
