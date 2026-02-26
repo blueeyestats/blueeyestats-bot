@@ -21,8 +21,8 @@ def generar_web(filas_partidos):
     </head>
     <body>
         <div class="container">
-            <h1>Blueeyestats Lab</h1>
-            <p>Branding: VOIDUM | Actualizado: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
+            <h1>BLUEEYESTATS LAB</h1>
+            <p>Branding: Blueeyestats-lab | Actualizado: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
             <table>
                 <tr><th>Evento</th><th>Predicción</th><th>Confianza</th></tr>
                 {filas_partidos}
@@ -47,3 +47,4 @@ partidos_hoy = "<tr><td>Ejemplo: Lakers vs Celtics</td><td>Gana Lakers</td><td>7
 # Ejecutamos ambas funciones
 generar_web(partidos_hoy)
 enviar_telegram("🏀 Blueeyestats: Reporte diario generado y Dashboard actualizado.")
+
