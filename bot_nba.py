@@ -48,3 +48,4 @@ partidos_hoy = "<tr><td>Ejemplo: Lakers vs Celtics</td><td>Gana Lakers</td><td>7
 generar_web(partidos_hoy)
 enviar_telegram("🏀 Blueeyestats: Reporte diario generado y Dashboard actualizado.")
 
+
