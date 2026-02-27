@@ -1,16 +1,14 @@
 import os
 import requests
-from nba_api.stats.endpoints import scoreboardv3
+from nba_api.live.endpoints import scoreboard # <--- Cambio clave aquí
 from openai import OpenAI
 
-# Configuración profesional
 client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 def main():
     try:
-        # Obtener partidos
-        sb = scoreboardv3.ScoreboardV3().get_dict()
-        games = sb['scoreBoard']['games']
+        # Nueva forma de obtener los partidos
+        games = scoreboard.ScoreBoard().get_dict()['scoreboard']['games']
         
         if not games:
             print("No hay partidos hoy.")
@@ -32,12 +30,12 @@ def main():
         requests.post(f"https://api.telegram.org/bot{token}/sendMessage", 
                       data={'chat_id': chat_id, 'text': f"🏀 *BLUEEYESTATS-LAB*\n\n{reporte}", 'parse_mode': 'Markdown'})
 
-        # Generar la Web básica para validar el dominio
+        # Crear Web
         with open("index.html", "w", encoding="utf-8") as f:
-            f.write(f"<html><body><h1>Blueeyestats-lab Activo</h1><p>{reporte}</p></body></html>")
+            f.write(f"<html><body style='background:#121212;color:white;padding:30px;'><h1>Blueeyestats-lab Activo</h1><p>{reporte.replace('\n', '<br>')}</p></body></html>")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error detallado: {e}")
 
 if __name__ == "__main__":
     main()
