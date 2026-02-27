@@ -1,51 +1,64 @@
 import os
 import requests
 from datetime import datetime
+from nba_api.stats.endpoints import scoreboardv3, leaguestandings
+from openai import OpenAI
 
-def generar_web(filas_partidos):
-    html_content = f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Blueeyestats Lab - Dashboard</title>
-        <style>
-            body {{ font-family: 'Montserrat', sans-serif; background-color: #1a1a1a; color: #f4f4f4; text-align: center; padding: 50px; }}
-            .container {{ max-width: 800px; margin: auto; background: #2d2d2d; padding: 30px; border-radius: 15px; border-left: 5px solid #c0c0c0; }}
-            h1 {{ color: #ffffff; text-transform: uppercase; letter-spacing: 2px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
-            th, td {{ padding: 15px; border-bottom: 1px solid #444; text-align: left; }}
-            th {{ color: #c0c0c0; }}
-            .footer {{ margin-top: 20px; font-size: 0.8em; color: #888; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>BLUEEYESTATS LAB</h1>
-            <p>Branding: Blueeyestats-lab | Actualizado: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
-            <table>
-                <tr><th>Evento</th><th>Predicción</th><th>Confianza</th></tr>
-                {filas_partidos}
-            </table>
-            <div class="footer">Sistema de análisis automatizado para NBA</div>
-        </div>
-    </body>
-    </html>
+# Configuración del Laboratorio
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+URL_WEB = "https://blueeyestats.com"
+
+def obtener_analisis_ia(resumen_partidos):
+    prompt = f"""
+    Eres el analista jefe de Blueeyestats-lab. Procesa estos partidos de la NBA:
+    {resumen_partidos}
+    
+    Genera un reporte detallado con:
+    1. Probabilidades matemáticas basadas en estadísticas.
+    2. Correcciones del bot (lesiones, rachas, cansancio).
+    3. Predicción final con porcentaje de confianza.
     """
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "system", "content": "Analista senior de NBA."},
+                  {"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
 
-def enviar_telegram(mensaje):
-    token = os.getenv('TELEGRAM_TOKEN')
-    chat_id = os.getenv('TELEGRAM_CHAT_ID')
-    url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={mensaje}"
-    requests.get(url)
+def ejecutar_bot():
+    try:
+        # Obtener partidos de hoy
+        sb = scoreboardv3.ScoreboardV3().get_dict()
+        games = sb['scoreBoard']['games']
+        
+        if not games:
+            print("No hay partidos hoy.")
+            return
 
-# Simulación de datos para estrenar la web
-partidos_hoy = "<tr><td>Ejemplo: Lakers vs Celtics</td><td>Gana Lakers</td><td>75%</td></tr>"
+        texto_partidos = ""
+        for g in games:
+            texto_partidos += f"- {g['awayTeam']['teamName']} vs {g['homeTeam']['teamName']}\n"
 
-# Ejecutamos ambas funciones
-generar_web(partidos_hoy)
-enviar_telegram("🏀 Blueeyestats: Reporte diario generado y Dashboard actualizado.")
+        # Análisis con la API de OpenAI
+        reporte_ia = obtener_analisis_ia(texto_partidos)
 
+        # Enviar a Telegram
+        token = os.getenv('TELEGRAM_TOKEN')
+        chat_id = os.getenv('TELEGRAM_CHAT_ID')
+        mensaje_telegram = f"🏀 *BLUEEYESTATS-LAB: REPORTE DIARIO*\n\n{reporte_ia}\n\n🌐 Dashboard: {URL_WEB}"
+        
+        requests.post(f"https://api.telegram.org/bot{token}/sendMessage", 
+                      data={'chat_id': chat_id, 'text': mensaje_telegram, 'parse_mode': 'Markdown'})
 
+        # Actualizar la Web (index.html)
+        with open("index.html", "w", encoding="utf-8") as f:
+            f.write(f"<html><body style='background:#1a1a1a;color:white;font-family:sans-serif;padding:40px;'>")
+            f.write(f"<h1 style='color:silver;'>BLUEEYESTATS-LAB</h1>")
+            f.write(f"<div style='border:1px solid #444;padding:20px;'>{reporte_ia.replace('\n', '<br>')}</div>")
+            f.write(f"</body></html>")
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    ejecutar_bot()
