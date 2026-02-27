@@ -1,37 +1,35 @@
 name: Ejecutar Blueeyestats Lab
 
 on:
-  schedule:
-    - cron: '0 21 * * *' # Se ejecuta a las 21:00 cada día
-  workflow_dispatch: # Permite ejecutarlo manualmente
+  workflow_dispatch: # Esto nos permite darle al botón de "Play" manualmente
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout código
-        uses: actions/checkout@v2
+      - name: Descargar código
+        uses: actions/checkout@v3
 
       - name: Configurar Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Instalar librerías
+      - name: Instalar solo lo necesario
         run: |
           pip install pandas requests nba_api openai
 
-      - name: Ejecutar Script
+      - name: Ejecutar el análisis
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python bot_nba.py
 
-      - name: Subir cambios a la Web
+      - name: Actualizar la Web
         run: |
           git config --global user.name "Blueeyestats Bot"
           git config --global user.email "bot@blueeyestats.com"
           git add index.html
-          git commit -m "Actualización Dashboard Blueeyestats-lab" || exit 0
+          git commit -m "Reporte Blueeyestats-lab generado" || exit 0
           git push
