@@ -1,25 +1,33 @@
 name: Ejecutar Blueeyestats Lab
+
 on:
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Descargar codigo
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-- name: Instalacion
+
+      - name: Instalacion
         run: pip install requests nba_api openai pandas --upgrade
+
       - name: Correr Bot
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python bot_nba.py
+
       - name: Update Web
         run: |
-          git config --global user.name "bot"
+          git config --global user.name "Blueeyestats Bot"
           git config --global user.email "bot@blueeyestats.com"
           git add index.html
           git commit -m "Web Update" || exit 0
