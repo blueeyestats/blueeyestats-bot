@@ -1,9 +1,7 @@
 name: Ejecutar Blueeyestats Lab
 
 on:
-  workflow_dispatch: # Botón manual
-  schedule:
-    - cron: '0 21 * * *' # Automático a las 21:00
+  workflow_dispatch: 
 
 jobs:
   build:
